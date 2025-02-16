@@ -1,9 +1,11 @@
 from pymodbus.client import ModbusSerialClient
 from influxdb import InfluxDBClient
+from influxdb_client import InfluxDBClient, Point, WritePrecision
 import serial.rs485
 import time
+from datetime import datetime
 
-# InfluxDB setup
+# Local InfluxDB setup
 INFLUXDB_ADDRESS = 'localhost'
 INFLUXDB_PORT = 8086
 INFLUXDB_DATABASE = 'weather_data'
@@ -11,6 +13,16 @@ INFLUXDB_DATABASE = 'weather_data'
 influx_client = InfluxDBClient(host=INFLUXDB_ADDRESS, port=INFLUXDB_PORT)
 influx_client.create_database(INFLUXDB_DATABASE)
 influx_client.switch_database(INFLUXDB_DATABASE)
+
+# InfluxDB Cloud Configuration
+INFLUXDB_URL = "https://us-west-2-1.aws.cloud2.influxdata.com"  # Replace with your region's URL
+INFLUXDB_TOKEN = "your_api_token"  # Replace with your API token
+INFLUXDB_ORG = "your_organization_name"  # Replace with your org name
+INFLUXDB_BUCKET = "weather_data"  # Replace with your bucket name
+
+# Initialize InfluxDB Client
+client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
+write_api = client.write_api(write_options=WritePrecision.NS)
 
 def write_to_influx(data):
     json_body = [
@@ -23,6 +35,22 @@ def write_to_influx(data):
         }
     ]
     influx_client.write_points(json_body)
+
+# Function to write data to influxdb cloud
+def write_weather_data(weather_data):
+    point = Point("weather")
+    
+    # Loop through dictionary and add all fields
+    for key, value in weather_data.items():
+        point = point.field(key, value)
+
+    # Add timestamp
+    point = point.time(datetime.utcnow(), WritePrecision.NS)
+
+    # Write to InfluxDB
+    write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=point)
+
+    print("Data successfully written to InfluxDB Cloud!")
 
 def read_weather_station_data(client):
     try:
