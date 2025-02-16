@@ -17,7 +17,7 @@ influx_client.switch_database(INFLUXDB_DATABASE)
 # InfluxDB Cloud Configuration
 INFLUXDB_URL = "https://us-west-2-1.aws.cloud2.influxdata.com"  # Replace with your region's URL
 INFLUXDB_TOKEN = "your_api_token"  # Replace with your API token
-INFLUXDB_ORG = "your_organization_name"  # Replace with your org name
+INFLUXDB_ORG = "No company"  # Replace with your org name
 INFLUXDB_BUCKET = "weather_data"  # Replace with your bucket name
 
 # Initialize InfluxDB Client
@@ -143,6 +143,7 @@ try:
         
         if weather_data:
             write_to_influx(weather_data)
+            write_weather_data(weather_data)
             print(f"Logged Weather Data: {weather_data}")
         
         time.sleep(5)  # Adjust as needed
